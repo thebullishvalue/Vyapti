@@ -110,11 +110,13 @@ def build_read(a) -> dict:
     ]
 
     # ── Flags ────────────────────────────────────────────────────────────
-    risk = None
+    # A risk is drawn in the short colour; a note (overbought being ordinary here) is not a
+    # warning, and is drawn in neutral ink, as the overbought zone itself is.
+    risk = note = None
     if zone == "OVERSOLD" and last["Direction"] == "DETERIORATING":
         risk = "No turn yet: Custom Breadth is still below Relative Breadth, and oversold readings can deepen."
     elif zone == "OVERBOUGHT" and zev.loc["OVERBOUGHT", "Time_%"] >= 35:
-        risk = (f"Overbought is common here: breadth has been above {OVERBOUGHT:.2f} on "
+        note = (f"Overbought is common here: breadth has been above {OVERBOUGHT:.2f} on "
                 f"{zev.loc['OVERBOUGHT', 'Time_%']:.0f}% of sessions since {since}.")
     caveat = None
     if a.universe.is_fallback:
@@ -130,6 +132,7 @@ def build_read(a) -> dict:
         "limit": a.verdict.sentence,
         "evidence": evidence,
         "risk": risk,
+        "note": note,
         "caveat": caveat,
         "trust": {"tier": _TIER[label], "chip": chip},
         "action": {"level": _TIER[label], "label": action_label, "prose": prose},

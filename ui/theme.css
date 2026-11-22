@@ -2814,6 +2814,89 @@ input::placeholder, textarea::placeholder {
    layer is dark. Painted from our page token in both appearances. */
 .stTabs::after { background-image: linear-gradient(to right, transparent, var(--bg)) !important; }
 
+/* ── Vyāpti: a note on the Read card is not a risk ──────────────────────────────
+   .hero-risk draws in the short colour: Arthagati's card uses it for what argues against
+   the call. Vyāpti also says when overbought is ordinary in an index (above 0.50 on a third
+   or more of sessions), which is the opposite of a warning, and overbought is drawn in
+   neutral ink everywhere else on the page. The note keeps the line, not the alarm. */
+.hero-risk.note { color: var(--ink-tertiary); }
+
+/* ── Vyāpti: the rail's date input and its calendar ─────────────────────────────
+   Arthagati, whose stylesheet this is, has no date input, so its rules styled only the
+   inner <input>: BaseWeb's wrapper kept the border Streamlit paints from the static dark
+   base in .streamlit/config.toml, a near-black frame on Paper, and the calendar opened
+   near-black on a white page. The wrapper is now the well, like every other input (the
+   inner field is transparent, or the two draw two borders a pixel apart), the date reads in
+   the data face like every other figure, and the calendar is painted from our own tokens so
+   it follows the appearance switch. The calendar block is VAAYDO's and Pragyam's: paint
+   the root, clear every descendant and both pseudo-elements (BaseWeb draws each day's band
+   and disc with ::before/::after), then put back the selected day from our accent. */
+[data-testid="stDateInput"] [data-baseweb="input"] {
+    background: var(--bg) !important;
+    border: 1px solid var(--line-strong) !important;
+    border-radius: var(--r-md) !important;
+    padding: 0 !important;
+    transition: border-color var(--fast) var(--ease) !important;
+}
+[data-testid="stDateInput"] [data-baseweb="input"]:hover { border-color: var(--ink-quaternary) !important; }
+[data-testid="stDateInput"] [data-baseweb="input"]:focus-within { border-color: var(--accent) !important; }
+[data-testid="stDateInput"] [data-baseweb="input"] > div,
+[data-testid="stDateInput"] input {
+    background: transparent !important;
+    border: none !important;
+}
+[data-testid="stDateInput"] input {
+    color: var(--ink) !important; -webkit-text-fill-color: var(--ink) !important;
+    font-family: var(--mono) !important; font-size: var(--fs-xs) !important;
+    min-height: 32px !important; padding: 0 var(--s3) !important;
+}
+[data-baseweb="calendar"],
+[data-baseweb="popover"] [data-baseweb="calendar"] {
+    background: var(--surface-1) !important;
+    color: var(--ink) !important;
+    border: 1px solid var(--line-strong) !important;
+    border-radius: var(--r-md) !important;
+    box-shadow: var(--shadow-pop) !important;
+    font-family: var(--mono) !important;
+}
+[data-baseweb="calendar"] * { background-color: transparent !important; }
+[data-baseweb="calendar"] *::before,
+[data-baseweb="calendar"] *::after { background-color: transparent !important; }
+[data-baseweb="calendar"] [role="columnheader"],
+[data-baseweb="calendar"] [role="presentation"] > [alt],
+[data-baseweb="calendar"] [data-baseweb="calendar-header"] * {
+    font-family: var(--mono) !important; font-size: var(--fs-3xs) !important;
+    text-transform: uppercase !important; letter-spacing: 0.12em !important;
+    color: var(--ink-quaternary) !important;
+}
+[data-baseweb="calendar"] button svg { fill: var(--ink-secondary) !important; }
+[data-baseweb="calendar"] button,
+[data-baseweb="calendar"] [role="gridcell"],
+[data-baseweb="calendar"] [role="gridcell"] > div {
+    font-family: var(--mono) !important; font-size: var(--fs-xs) !important;
+    color: var(--ink-secondary) !important;
+}
+[data-baseweb="calendar"] button:hover,
+[data-baseweb="calendar"] [role="gridcell"]:hover > div {
+    background-color: var(--surface-2) !important; color: var(--ink) !important;
+}
+/* The chosen day. BaseWeb marks it with aria-selected in some versions and with an
+   aria-label that opens "Selected." in the one Streamlit 1.52 ships; both are named. Its
+   disc is the cell's ::after, put back here after the reset above cleared it. */
+[data-baseweb="calendar"] [aria-selected="true"] > div,
+[data-baseweb="calendar"] [role="gridcell"][aria-label^="Selected"] > div,
+[data-baseweb="calendar"] [role="gridcell"][aria-label^="Selected"]:hover > div {
+    color: #FFFFFF !important; background-color: transparent !important;
+}
+[data-baseweb="calendar"] [aria-selected="true"]::after,
+[data-baseweb="calendar"] [role="gridcell"][aria-label^="Selected"]::after {
+    background-color: var(--accent) !important;
+}
+[data-baseweb="calendar"] [aria-disabled="true"],
+[data-baseweb="calendar"] [aria-disabled="true"] > div {
+    color: var(--ink-quaternary) !important;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    FIDELITY — measured defects, fixed at the rule that caused them
    Found by a scan of every page, tab and expander at 1440 / 1024 / 834 /

@@ -972,7 +972,7 @@ def render_hero_card(verdict: dict) -> None:
     flags = "".join(
         f'<div class="hero-risk">{html_mod.escape(t)}</div>'
         for t in (verdict.get("caveat"), verdict.get("risk")) if t
-    )
+    ) + (f'<div class="hero-risk note">{html_mod.escape(verdict["note"])}</div>' if verdict.get("note") else "")
 
     st.markdown(
         f"""\

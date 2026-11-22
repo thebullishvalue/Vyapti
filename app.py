@@ -4,8 +4,8 @@ Vyāpti — Main Streamlit entrypoint.
 
 VYĀPTI — one oscillator says where breadth stands, two more say which
 way it is moving, and the index's own history says whether that reading has
-ever mattered. Built on the Aarambh oscillators; the interface is the
-@thebullishvalue family's (Tattva, Arthagati, Pragyam).
+ever mattered. Built on the Aarambh oscillators; the interface and the terminal
+output are the Pragyam family's, shared with every member.
 
 Usage:
     streamlit run app.py
@@ -34,6 +34,7 @@ from config import (
     TIMEFRAMES,
     VERSION,
 )
+from logger_config import capture_library_output, console
 from ui import format as fmt
 from ui.components import (
     render_control_hint,
@@ -72,29 +73,96 @@ def load_market_data(tickers: tuple, start: dt.date, end: dt.date, benchmark, in
 _RESULTS_MAX = 4
 
 
+#: The engine's stages as the progress card and the run log show them: the step, and its detail.
+#: Phases come from the percentage (RUN_PHASES in ui/theme.py): 1 Constituents · 2 Price Data ·
+#: 3 Breadth Engine · 4 Record & Sectors.
+_ENGINE_STEPS = {
+    "computing the oscillators": ("Computing the Oscillators",
+                                  "advances · declines · Custom & Relative Breadth"),
+    "measuring the record":      ("Measuring the Record", "zones · crossings · episodes · one and three months on"),
+    "reading the sectors":       ("Reading the Sectors", "the same oscillator, sector by sector"),
+}
+
+
+def _step(slot, pct: int, label: str, detail: str = "") -> None:
+    """One engine stage: the progress card moves on and the run log opens a numbered, timed step."""
+    progress_bar(slot, pct, label, detail)
+    console.begin_step(label, detail)
+
+
+#: The verdict as the run log names it (the page says it in full).
+_VERDICT_WORDS = {"FAVOURABLE": "Better than normal", "NORMAL": "About normal", "UNFAVOURABLE": "Worse than normal",
+                  "MIXED": "Mixed"}
+
+
+def _record_line(a) -> str:
+    words = _VERDICT_WORDS.get(a.verdict.label)
+    if words is None:
+        return "Too few cases to judge"
+    eps = a.zone_evidence.loc[a.zone, "Episodes"] if a.zone in a.zone_evidence.index else None
+    return f"{words} after {a.zone.lower()}" + (f" · {int(eps)} episodes" if eps is not None else "")
+
+
+def _result_card(a) -> dict:
+    """What the run produced, for the run log's closing card."""
+    counted = a.data.close.shape[1]
+    last = a.last
+    card = {
+        "As of": fmt.when(a.asof),
+        "Universe": f"{a.universe.name} · {counted} of {len(a.universe.tickers)} {a.universe.unit.lower()} priced",
+        "History": f"{len(a.panel):,} sessions · {a.years:.1f} years",
+        "Zone": f"{a.zone.title()} · Relative Breadth {last['Relative_Breadth']:.3f}",
+        "Direction": str(last.get("Direction", "—")).title(),
+        "Record": _record_line(a),
+        "Sectors": f"{len(a.sectors)} read" if len(a.sectors) else "none with 5 or more members",
+    }
+    if a.recent:
+        k, ago = a.recent[0]
+        card["Last crossing"] = f"{CROSSING_TEXT[k].removeprefix('Breadth ').lower()}, {ago} sessions ago"
+    return card
+
+
 def _run(params: dict, slot) -> object | None:
+    """The analysis for ``params``: from this session's store when it has one (a replay prints
+    nothing), else computed as a family-console run: the request, each stage as a numbered,
+    timed step, the result card and the closing line."""
     key = (params["kind"], params["index"], params["asof"], params["years"])
     cache = st.session_state.setdefault("results_cache", {})
     if key in cache:
         cache[key] = cache.pop(key)
         return cache[key]
 
-    progress_bar(slot, 4, "Resolving constituents", f"{params['index']} · NSE · Wikipedia")
-    universe = load_universe(params["kind"], params["index"])
-    start = history_start(params["asof"], params["asof"], params["years"])
-    progress_bar(slot, 30, "Downloading prices",
-                 f"{len(universe.tickers)} {universe.unit.lower()} · Yahoo Finance · since {start:%b %Y}")
-    data = load_market_data(tuple(universe.tickers), start, params["asof"], universe.benchmark,
-                            tuple(universe.invert))
-    progress_bar(slot, 75, "Computing the oscillators",
-                 f"{data.close.shape[1]} series × {len(data.close):,} sessions")
-    analysis = build_analysis(universe, data, start, params["asof"])
-    progress_bar(slot, 100, "Ready", "Record and sectors complete")
+    console.header(f"{PRODUCT_NAME.upper()} · Breadth Analysis", VERSION)
+    console.main_header("Request", {"Market": params["kind"], "Index": params["index"],
+                                    "As of": f"{params['asof']:%Y-%m-%d}", "Record": f"{params['years']} years"})
+    try:
+        _step(slot, 4, "Resolving Constituents", f"{params['index']} · NSE · Wikipedia")
+        universe = load_universe(params["kind"], params["index"])
+        start = history_start(params["asof"], params["asof"], params["years"])
+        _step(slot, 25, "Downloading Prices",
+              f"{len(universe.tickers)} {universe.unit.lower()} · Yahoo Finance · since {start:%b %Y}")
+        data = load_market_data(tuple(universe.tickers), start, params["asof"], universe.benchmark,
+                                tuple(universe.invert))
+        analysis = build_analysis(universe, data, start, params["asof"],
+                                  progress=lambda pct, k: _step(slot, pct, *_ENGINE_STEPS[k]))
+    except Exception as exc:
+        console.end_step(f"{type(exc).__name__}: {exc}", "fail")
+        console.end_run("FAILED")
+        raise
+    console.end_step()
+    progress_bar(slot, 100, "Analysis Complete", "the read, its record and the sectors")
     slot.empty()
-    if analysis is not None:
-        cache[key] = analysis
-        while len(cache) > _RESULTS_MAX:
-            cache.pop(next(iter(cache)))
+    if analysis is None:
+        console.warning("Not enough sessions with constituents trading to read breadth.")
+        console.end_run()
+        return None
+    console.summary("Result", _result_card(analysis))
+    for n in notices_for(analysis, params["asof"]):
+        (console.warning if n["kind"] == "warning" else console.info)(f"{n['title']}: {n['body']}")
+    console.end_run()
+    cache[key] = analysis
+    while len(cache) > _RESULTS_MAX:
+        cache.pop(next(iter(cache)))
     return analysis
 
 
@@ -213,6 +281,10 @@ def main() -> None:
     # Resolve the appearance BEFORE anything is styled, so chrome and charts agree on one value.
     st.session_state["theme"] = "light" if theme_choice() == "Paper" else "dark"
     inject_css(theme=st.session_state["theme"])
+    # The family console: third-party output routed into the run, and the masthead once per process.
+    capture_library_output()
+    console.banner(PRODUCT_NAME.upper(), VERSION, "Market Breadth · Relative Breadth · Custom Breadth · A/D Line",
+                   {"Maintainer": COMPANY, "Engine": "Aarambh oscillators · zone record · sectors"})
     progress_slot = st.empty()
 
     # ─── The control rail ──────────────────────────────────────────────────

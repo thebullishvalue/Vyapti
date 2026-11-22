@@ -76,3 +76,19 @@ def test_window_view(analysis):
     assert v.index[-1] == analysis.asof and (analysis.asof - v.index[0]).days <= 92
     assert app.window_view(analysis, "MAX").index[0] == analysis.panel.index[0]
     assert app.window_view(analysis, "YTD").index[0].year == analysis.asof.year
+
+
+def test_overbought_note_is_not_a_risk(analysis):
+    """'Overbought is common here' is a neutral note; only a real risk takes the short colour."""
+    r = build_read(analysis)
+    assert not (r.get("risk") or "").startswith("Overbought is common")
+    if r.get("note"):
+        assert r["note"].startswith("Overbought is common") and analysis.zone == "OVERBOUGHT"
+
+
+def test_run_log_record_line(analysis):
+    import app
+    line = app._record_line(analysis)
+    assert line and line[0].isupper() and "\n" not in line
+    card = app._result_card(analysis)
+    assert {"As of", "Universe", "History", "Zone", "Direction", "Record", "Sectors"} <= set(card)

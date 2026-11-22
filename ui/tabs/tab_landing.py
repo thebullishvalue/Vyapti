@@ -31,7 +31,7 @@ _fib = "/".join(str(p) for p in FIB_PERIODS)
 #: claim, its companions say which way it is moving, the record checks whether
 #: the claim has ever mattered — without depending on either being right.
 _SYSTEM_PANELS = (
-    ("RELATIVE BREADTH", "The claim · where breadth is",
+    ("BREADTH", "Claim · where it stands",
      "Counts every constituent that traded as advancing or declining, smooths the share of "
      "advancers into Custom Breadth, then averages it with its own Fibonacci moving averages. "
      "The result places the market in one of three zones. It is a reading of participation — "
@@ -39,7 +39,7 @@ _SYSTEM_PANELS = (
      (("Zones", f"Oversold < {OVERSOLD:.2f} · Overbought > {OVERBOUGHT:.2f}"),
       ("Built from", f"Custom Breadth + {_fib}-session averages"),
       ("Reads", "Oversold · Neutral · Overbought"))),
-    ("DIRECTION & MOMENTUM", "The confirmation · which way",
+    ("DIRECTION", "Confirmation · which way",
      "Custom Breadth above Relative Breadth means participation is improving; below, it is "
      "deteriorating. The Relative A/D Ratio says whether the day-to-day advance/decline balance "
      "agrees, and the A/D line against its 50-session average gives the longer trend the "
@@ -47,7 +47,7 @@ _SYSTEM_PANELS = (
      (("Direction", "Custom vs Relative Breadth"),
       ("Momentum", "Relative A/D Ratio · 3 sessions"),
       ("Trend", "A/D line vs 50-session average"))),
-    ("RECORD", "The check · what it has meant",
+    ("RECORD", "Check · what it has meant",
      "Groups every past session by its zone and every crossing of a zone line by its date, and "
      "measures what the index did one and three months later against any session in the same "
      "history. Samples are counted in separate episodes, and nothing uses information from after "

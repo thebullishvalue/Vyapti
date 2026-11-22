@@ -74,7 +74,14 @@ def _reference(universe: Universe, data: MarketData, panel: pd.DataFrame) -> tup
     return panel["EW_Index"], name, False
 
 
-def build_analysis(universe: Universe, data: MarketData, start_date, end_date) -> Analysis | None:
+def build_analysis(universe: Universe, data: MarketData, start_date, end_date, progress=None) -> Analysis | None:
+    """The whole reading from one universe's prices.
+
+    ``progress(pct, key)``, when given, is called as each stage starts (the app's progress card
+    and run log listen to it); the engine itself stays free of any UI.
+    """
+    say = progress or (lambda pct, key: None)
+    say(70, "computing the oscillators")
     panel = ind.compute_panel(data.close)
     if panel.empty:
         return None
@@ -86,10 +93,12 @@ def build_analysis(universe: Universe, data: MarketData, start_date, end_date) -
     if view.empty:
         return None
 
+    say(90, "measuring the record")
     price, name, uses_index = _reference(universe, data, hist)
     zev = study.zone_evidence(hist, price)
     cev = study.crossing_evidence(hist, price)
     recent = study.recent_crossings(hist)
+    say(95, "reading the sectors")
     sector_osc = ind.sector_oscillators(data.close, universe.sectors)
 
     return Analysis(

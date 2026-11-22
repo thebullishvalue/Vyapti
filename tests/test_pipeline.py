@@ -73,3 +73,19 @@ def test_download_splits_benchmark_inverts_and_warms_up(monkeypatch):
     assert kw["start"] == start - datetime.timedelta(days=bd.WARMUP_CALENDAR_DAYS)
     assert list(md.close.columns) == ["A", "USDX"] and md.missing == ["DEAD"]
     assert (md.close["USDX"] == 0.5).all() and md.benchmark_ticker == "^B"
+
+
+def test_progress_hook_reports_each_stage_in_order():
+    """The app's progress card and run log listen to build_analysis: every stage, once, rising."""
+    import datetime
+
+    from breadth import build_analysis
+    from synthetic import make_market
+
+    seen = []
+    uni, data = make_market()
+    a = build_analysis(uni, data, datetime.date(2023, 11, 20), datetime.date(2026, 11, 20),
+                       progress=lambda pct, key: seen.append((pct, key)))
+    assert a is not None
+    assert [k for _, k in seen] == ["computing the oscillators", "measuring the record", "reading the sectors"]
+    assert [p for p, _ in seen] == sorted(p for p, _ in seen)
