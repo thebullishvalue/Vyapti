@@ -31,7 +31,7 @@ Python 3.10+.
 
 ## The interface
 
-The interface is the @thebullishvalue family's (Tattva, Arthagati, Pragyam). Its UI layer (`ui/theme.css`, `ui/theme.py`, `ui/components.py`, `ui/format.py`) is adopted whole from Arthagati, so Breadth reads as one more instrument from the same terminal:
+The interface is the @thebullishvalue family's (Tattva, Arthagati, Pragyam). Its UI layer (`ui/theme.css`, `ui/theme.py`, `ui/components.py`, `ui/format.py`) is adopted whole from Arthagati, so Vyāpti reads as one more instrument from the same terminal:
 
 - **"Graphite" design language:** Inter for prose, JetBrains Mono for every figure.
 - **Semantic colour only:** green is long, red is short, amber is caution, cobalt is the system.
@@ -75,7 +75,7 @@ Each session, every constituent that traded is counted as advancing, declining o
 
 **Direction** is *improving* when Custom Breadth is above Relative Breadth and *deteriorating* when below. A gap of at least 0.005 is needed to flip it, so a tiny crossing doesn't flicker the reading.
 
-Colours: **green** = oversold (and positive momentum), **amber** = overbought, **red** = negative momentum, **gold** = Relative Breadth, **cyan** = Custom Breadth.
+Colours: **green** = oversold (and positive momentum), **red** = negative momentum, **neutral slate** = overbought (it makes no claim), **cobalt** = Relative Breadth, **steel** = Custom Breadth.
 
 ---
 
@@ -163,7 +163,7 @@ CI (GitHub Actions) runs lint and tests on Python 3.10 and 3.13 on every push.
 
 ## Version
 
-**v3.2.0 (2026)**: Renamed Market Breadth → Vyāpti.
+**v3.2.0 (2026)**: Renamed Market Breadth → Vyāpti and moved to this repository. Development up to here happened in `thebullishvalue/Breadth`; its full history is preserved in this one.
 
 **v3.1.0 (2026)**: The family interface. Adopted the shared UI layer of Tattva, Arthagati and Pragyam: the Graphite design system with Paper/Slate appearances, tape / command bar / notice rail shell, `st.navigation` pages in house reading order, Tattva's read card, panel-anchored chart windows, the institutional table, and the family landing page.
 
