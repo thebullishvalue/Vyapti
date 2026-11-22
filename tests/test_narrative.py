@@ -16,7 +16,7 @@ def view(rb, cb, rel=0.1, zone=None, days=3, trend="RISING", adv=300, dec=200):
 
 
 ZEV = pd.DataFrame({"Time_%": [5, 45, 50]}, index=["OVERSOLD", "NEUTRAL", "OVERBOUGHT"])
-CEV = pd.DataFrame({"N_1M": [20, 20, 60, 60], "Up_1M_%": [70, 65, 62, 60], "Avg_1M_%": [2.5, 1.8, 1.0, 0.5]},
+CEV = pd.DataFrame({"N_1M": [20, 20, 60, 4], "Up_1M_%": [70, 65, 62, 60], "Avg_1M_%": [2.5, 1.8, 1.0, 0.5]},
                    index=["OS_IN", "OS_OUT", "OB_IN", "OB_OUT"])
 BASE = pd.Series({"Up_1M_%": 62.0, "Avg_1M_%": 1.0})
 
@@ -57,3 +57,9 @@ def test_percentile_wording():
     t = text(narrative.reading(v, v, ZEV, [], "Stocks"))
     assert "lower than" in t
     assert study.CROSSING_VERB["OS_OUT"] in narrative.reading(v, v, ZEV, [("OS_OUT", 1)], "Stocks")[0]
+
+
+def test_watch_says_when_a_crossing_is_too_rare_to_read():
+    v = view(0.52, 0.51, rel=0.3)
+    exit_item = narrative.watch(v, CEV, BASE, "IDX")[1]
+    assert "only 4 times before here, too few to read" in exit_item and "%" not in exit_item.split("0.50.")[1]

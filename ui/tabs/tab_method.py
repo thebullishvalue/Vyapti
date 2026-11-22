@@ -23,12 +23,15 @@ from breadth.indicators import (
 )
 from breadth.study import (
     BIG_EDGE_PTS,
+    BIG_HIT_PTS,
     COOLDOWN,
     EDGE_PTS,
     EPISODE_GAP,
     HIT_PTS,
     HORIZONS,
     MIN_EPISODES,
+    MIN_EVENTS,
+    MIN_SESSIONS,
 )
 from ui.components import render_section_header, render_table_panel
 
@@ -82,10 +85,13 @@ def render(a) -> None:
         ("Horizons", " and ".join(f"{k} ({v} sessions)" for k, v in HORIZONS.items())),
         ("Zones", "Every session grouped by its zone; forward index return measured from that session"),
         ("Crossings", f"Measured from the crossing day; a repeat within {COOLDOWN} sessions is not counted"),
-        ("Episodes", f"Zone stretches fewer than {EPISODE_GAP} sessions apart count as one; fewer than "
-                     f"{MIN_EPISODES} episodes is 'too few'"),
-        ("Better than normal", f"1-month average ≥ {EDGE_PTS} pts above any session and hit rate ≥ {HIT_PTS:.0f} "
-                               f"pts above — or average ≥ {BIG_EDGE_PTS} pts above. Worse: the mirror image"),
+        ("Episodes", f"Zone stretches fewer than {EPISODE_GAP} sessions apart count as one"),
+        ("Enough evidence", f"A zone needs {MIN_EPISODES} episodes and {MIN_SESSIONS} sessions with a month of "
+                            f"follow-through; a crossing needs {MIN_EVENTS} past occurrences. Otherwise: too few"),
+        ("Better / worse", f"The average move leans once it differs by {EDGE_PTS} pts, the hit rate once it differs "
+                           f"by {HIT_PTS:.0f} pts. Both leaning the same way decides it; one alone decides it only if "
+                           f"large ({BIG_EDGE_PTS} pts / {BIG_HIT_PTS:.0f} pts)"),
+        ("Mixed", "The average move and the hit rate lean opposite ways"),
         ("No look-ahead", "Every figure uses only information available on its own date"),
         ("Survivorship", "History uses today's constituents; names that left the index are missing"),
-    ]), key="method-record", context="", label_col="Item", max_height=300)
+    ]), key="method-record", context="", label_col="Item", max_height=360)

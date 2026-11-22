@@ -14,13 +14,14 @@ import pandas as pd
 from breadth.indicators import OVERBOUGHT, OVERSOLD
 from breadth.narrative import ZONE_MEANING
 
-_TIER = {"FAVOURABLE": "favourable", "NORMAL": "normal", "UNFAVOURABLE": "unfavourable",
+_TIER = {"FAVOURABLE": "favourable", "NORMAL": "normal", "UNFAVOURABLE": "unfavourable", "MIXED": "normal",
          "TOO FEW CASES": "norecord"}
 _ACTION = {
     "FAVOURABLE": ("BETTER THAN NORMAL", "the index has usually done better than normal from here"),
     "NORMAL": ("ABOUT NORMAL", "the index has usually done about as well as normal from here"),
     "UNFAVOURABLE": ("WORSE THAN NORMAL", "the index has usually done worse than normal from here"),
-    "TOO FEW CASES": ("NO RECORD", "too few past episodes to say what this zone means here"),
+    "MIXED": ("MIXED RECORD", "how often the index rose and how far it moved point different ways"),
+    "TOO FEW CASES": ("TOO FEW CASES", "too little history in this zone to say what it means here"),
 }
 _CLASS = {"FAVOURABLE": "buy", "UNFAVOURABLE": "sell"}
 
@@ -37,6 +38,15 @@ def _ordinal(p: float) -> str:
     n = int(round(p * 100))
     suffix = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
     return f"{n}{suffix} percentile"
+
+
+def _rank_phrase(p: float) -> str:
+    """'lowest' / 'highest' at the extremes, where an ordinal ('0th percentile') reads as an error."""
+    if p <= 0.0:
+        return "lowest reading"
+    if p >= 1.0:
+        return "highest reading"
+    return _ordinal(p)
 
 
 def _tone(x: float, neutral_band: float = 0.0) -> str:
@@ -57,7 +67,8 @@ def build_read(a) -> dict:
     row, base = zev.loc[zone], zev.loc["ALL"]
     eps = int(row["Episodes"])
     if label == "TOO FEW CASES":
-        chip = f"{eps} EPISODE{'S' if eps != 1 else ''} SINCE {since.upper()}"
+        n = int(row["N_1M"])
+        chip = f"{eps} EPISODE{'S' if eps != 1 else ''} · {n} SESSION{'S' if n != 1 else ''} SINCE {since.upper()}"
     else:
         chip = (f"{eps} EPISODES · UP {row['Up_1M_%']:.0f}% VS {base['Up_1M_%']:.0f}% "
                 f"ONE MONTH LATER")
@@ -82,7 +93,7 @@ def build_read(a) -> dict:
     evidence = [
         {"title": "Relative Breadth", "value": zone_pos, "tone": zone_tone,
          "label": f"{rb:.3f} · {zone.title()}",
-         "detail": f"{where} · {_ordinal(zone_pos)} since {since}"},
+         "detail": f"{where} · {_rank_phrase(zone_pos)} since {since}"},
         {"title": "Direction", "value": position(gap), "tone": _tone(float(gap.iloc[-1]), 0.005),
          "label": str(last["Direction"]).title(),
          "detail": f"Custom Breadth {cb:.3f} against Relative Breadth {rb:.3f}"},

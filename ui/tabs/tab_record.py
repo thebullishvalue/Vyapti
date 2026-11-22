@@ -14,13 +14,14 @@ from __future__ import annotations
 
 import pandas as pd
 
-from breadth.study import COOLDOWN, EPISODE_GAP, MIN_EPISODES, judge
+from breadth.study import COOLDOWN, EPISODE_GAP, enough, judge
 from ui import format as fmt
 from ui.components import render_kpi_strip, render_note, render_section_header, render_table_panel
 
-VERSUS = {"FAVOURABLE": "Better", "NORMAL": "Normal", "UNFAVOURABLE": "Worse"}
-VERSUS_LONG = {"FAVOURABLE": "Better than normal", "NORMAL": "About normal", "UNFAVOURABLE": "Worse than normal"}
-_TONE = {"FAVOURABLE": "success", "NORMAL": "neutral", "UNFAVOURABLE": "danger"}
+VERSUS = {"FAVOURABLE": "Better", "NORMAL": "Normal", "UNFAVOURABLE": "Worse", "MIXED": "Mixed"}
+VERSUS_LONG = {"FAVOURABLE": "Better than normal", "NORMAL": "About normal", "UNFAVOURABLE": "Worse than normal",
+               "MIXED": "Mixed record"}
+_TONE = {"FAVOURABLE": "success", "NORMAL": "neutral", "UNFAVOURABLE": "danger", "MIXED": "neutral"}
 _ZONES = ("OVERSOLD", "NEUTRAL", "OVERBOUGHT")
 
 
@@ -29,14 +30,14 @@ def zone_cards(a) -> list[dict]:
     cards = []
     for z in _ZONES:
         r = zev.loc[z]
-        enough = r["Episodes"] >= MIN_EPISODES and r["N_1M"] > 0
-        verdict = judge(r, base) if enough else None
+        ok = enough(r)
+        verdict = judge(r, base) if ok else None
         cards.append({
             "label": z.title(),
-            "value": f"{r['Up_1M_%']:.0f}%" if enough else "—",
+            "value": f"{r['Up_1M_%']:.0f}%" if ok else "—",
             "subtext": (f"{VERSUS_LONG[verdict]} · avg {r['Avg_1M_%']:+.1f}% · "
-                        f"{int(r['Episodes'])} episodes" if enough
-                        else f"only {int(r['Episodes'])} episodes"),
+                        f"{int(r['Episodes'])} episodes" if ok
+                        else f"too few: {int(r['Episodes'])} episodes · {int(r['N_1M'])} sessions"),
             "color_class": _TONE[verdict] if verdict else "neutral",
             "tooltip": "Share of sessions in this zone after which the index was higher one month later.",
         })
@@ -51,11 +52,11 @@ def zone_table(a) -> pd.DataFrame:
     rows = []
     for z in _ZONES:
         r = zev.loc[z]
-        enough = r["Episodes"] >= MIN_EPISODES
+        ok = enough(r)
         rows.append({"Zone": z.title(), "Share %": r["Time_%"], "Episodes": int(r["Episodes"]),
                      "Up 1M %": r["Up_1M_%"], "Avg 1M %": r["Avg_1M_%"],
                      "Up 3M %": r["Up_3M_%"], "Avg 3M %": r["Avg_3M_%"],
-                     "Versus normal": VERSUS[judge(r, base)] if enough else "Too few"})
+                     "Versus normal": VERSUS[judge(r, base)] if ok else "Too few"})
     rows.append({"Zone": "Any session", "Share %": 100.0, "Episodes": None,
                  "Up 1M %": base["Up_1M_%"], "Avg 1M %": base["Avg_1M_%"],
                  "Up 3M %": base["Up_3M_%"], "Avg 3M %": base["Avg_3M_%"], "Versus normal": "—"})
@@ -70,7 +71,7 @@ def crossing_table(a) -> pd.DataFrame:
                      "Most recent": r["Last"].date() if pd.notna(r["Last"]) else None,
                      "Up 1M %": r["Up_1M_%"], "Avg 1M %": r["Avg_1M_%"],
                      "Up 3M %": r["Up_3M_%"], "Avg 3M %": r["Avg_3M_%"],
-                     "Versus normal": VERSUS[judge(r, base)] if r["N_1M"] >= MIN_EPISODES else "Too few"})
+                     "Versus normal": VERSUS[judge(r, base)] if enough(r, "crossing") else "Too few"})
     return pd.DataFrame(rows)
 
 

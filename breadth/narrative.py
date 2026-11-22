@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 
 from .indicators import OVERBOUGHT, OVERSOLD
-from .study import CROSSING_VERB
+from .study import CROSSING_VERB, MIN_EVENTS
 
 ZONE_CSS = {"OVERSOLD": "success", "NEUTRAL": "neutral", "OVERBOUGHT": "warning"}
 ZONE_LABEL = {"OVERSOLD": "Oversold", "NEUTRAL": "Neutral", "OVERBOUGHT": "Overbought"}
@@ -111,8 +111,11 @@ def reading(view: pd.DataFrame, panel: pd.DataFrame, zone_ev: pd.DataFrame, rece
 
 def _evidence(cev: pd.DataFrame, base: pd.Series, key: str, index_name: str) -> str:
     row = cev.loc[key]
-    if row["N_1M"] < 3:
-        return ""
+    n = int(row["N_1M"])
+    if n == 0:
+        return " It has not happened before in this history."
+    if n < MIN_EVENTS:
+        return f" It has happened only {n} time{'s' if n != 1 else ''} before here, too few to read."
     return (f" Of the {int(row['N_1M'])} past times, {index_name} was higher a month later in "
             f"{row['Up_1M_%']:.0f}% (average {row['Avg_1M_%']:+.1f}%), against {base['Up_1M_%']:.0f}% "
             f"(average {base['Avg_1M_%']:+.1f}%) for any month.")

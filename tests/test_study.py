@@ -55,16 +55,47 @@ def test_recent_crossings():
     assert rec == [("OS_OUT", 1), ("OS_IN", 5)]
 
 
-@pytest.mark.parametrize("up,avg,label", [(70, 2.5, "FAVOURABLE"), (64, 2.6, "FAVOURABLE"), (64, 1.7, "NORMAL"),
-                                          (66, 1.2, "NORMAL"),
-                                          (55, 0.4, "UNFAVOURABLE"), (62, -0.6, "UNFAVOURABLE")])
+@pytest.mark.parametrize("up,avg,label", [
+    (70, 2.5, "FAVOURABLE"),     # both lean better
+    (64, 2.6, "FAVOURABLE"),     # only the average leans, by a lot
+    (64, 1.7, "NORMAL"),         # only the average leans, not by enough
+    (66, 1.2, "NORMAL"),         # neither leans
+    (55, 0.4, "UNFAVOURABLE"),   # both lean worse
+    (62, -0.6, "UNFAVOURABLE"),  # only the average leans, by a lot
+    (80, 1.0, "FAVOURABLE"),     # only the hit rate leans, by a lot (+18 pts)
+    (33, 0.7, "UNFAVOURABLE"),   # the Dow case: hit rate -29 pts, average just inside the band
+    (75, 0.3, "MIXED"),          # rises more often, but by less
+    (52, 2.0, "MIXED"),          # rises less often, but by more
+])
 def test_judge(up, avg, label):
     base = pd.Series({"Up_1M_%": 62.0, "Avg_1M_%": 1.0})
     assert study.judge(pd.Series({"Up_1M_%": up, "Avg_1M_%": avg}), base) == label
 
 
+@pytest.mark.parametrize("episodes,sessions,ok", [(5, 20, True), (4, 60, False), (12, 19, False), (5, 9, False)])
+def test_enough_for_zones(episodes, sessions, ok):
+    assert study.enough(pd.Series({"Episodes": episodes, "N_1M": sessions})) is ok
+
+
+def test_enough_for_crossings():
+    assert study.enough(pd.Series({"N_1M": study.MIN_EVENTS}), "crossing")
+    assert not study.enough(pd.Series({"N_1M": study.MIN_EVENTS - 1}), "crossing")
+
+
+def test_too_few_sessions_is_too_few_even_with_enough_episodes():
+    """The Dow case: 5 episodes but only 9 sessions with a month of follow-through."""
+    zev = pd.DataFrame({"Time_%": [1.4, 100.0], "Sessions": [11, 808], "Episodes": [5, np.nan],
+                        "Up_1M_%": [33.3, 70.5], "Avg_1M_%": [0.7, 1.2], "N_1M": [9, 787]},
+                       index=["OVERSOLD", "ALL"])
+    v = study.verdict(zev, "OVERSOLD", "DOW", pd.Timestamp("2023-09-01"))
+    assert v.label == "TOO FEW CASES"
+    assert "in 5 separate episodes, covering 9 sessions" in v.sentence and "33%" not in v.sentence
+    assert "at least 20 sessions with a month of follow-through, so" in v.sentence
+    assert "at least 5 separate episodes" not in v.sentence        # episodes were enough; name only the shortfall
+
+
 def test_verdict_text():
-    zones = (["NEUTRAL"] * 40 + ["OVERSOLD"] * 5) * 6 + ["NEUTRAL"] * 40
+    zones = (["NEUTRAL"] * 40 + ["OVERSOLD"] * 5) * 6 + ["NEUTRAL"] * 40   # 6 episodes, 30 sessions
     p = panel_with(zones)
     rng = np.random.default_rng(0)
     price = pd.Series(100 * np.exp(np.cumsum(rng.normal(0, 0.01, len(p)))), index=p.index)
@@ -73,4 +104,5 @@ def test_verdict_text():
     assert v.sentence.startswith("Since Jan 2024, breadth has been oversold in 6 separate episodes")
     assert "an oversold session" in v.sentence
     few = study.verdict(zev, "OVERBOUGHT", "TEST", p.index[0])
-    assert few.label == "TOO FEW CASES" and "0 separate episodes" in few.sentence
+    assert few.label == "TOO FEW CASES" and "in 0 separate episodes" in few.sentence
+    assert "at least 5 separate episodes and 20 sessions" in few.sentence

@@ -14,7 +14,7 @@ def test_build_analysis_end_to_end():
     assert a is not None and a.uses_index and a.index_name == "TEST"
     assert a.view.index[0] >= pd.Timestamp("2026-06-01") and a.asof == pd.Timestamp("2026-11-20")
     assert a.zone in {"OVERSOLD", "NEUTRAL", "OVERBOUGHT"}
-    assert a.verdict.label in {"FAVOURABLE", "NORMAL", "UNFAVOURABLE", "TOO FEW CASES"}
+    assert a.verdict.label in {"FAVOURABLE", "NORMAL", "UNFAVOURABLE", "MIXED", "TOO FEW CASES"}
     assert len(a.reading) == 3 and len(a.watch) == 2
     assert set(a.zone_evidence.index) == {"OVERSOLD", "NEUTRAL", "OVERBOUGHT", "ALL"}
     assert set(a.crossing_evidence.index) == {"OS_IN", "OS_OUT", "OB_IN", "OB_OUT"}

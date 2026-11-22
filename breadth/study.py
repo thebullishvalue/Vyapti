@@ -20,11 +20,22 @@ from .indicators import ZONES, crossings
 HORIZONS = {"1M": 21, "3M": 63}
 COOLDOWN = 10            # sessions: a crossing within this many sessions of the previous one is ignored
 EPISODE_GAP = 10         # sessions: zone stretches closer than this are one episode
+# ── How much evidence a verdict needs ───────────────────────────────────────
+# A zone needs enough separate episodes AND enough sessions with a full month
+# of follow-through: a handful of sessions from a few episodes cannot carry a
+# percentage (3 of 9 reads as "33%" and looks like a finding). A crossing is a
+# single dated event, so it needs enough past occurrences.
 MIN_EPISODES = 5
-# A zone is called better/worse than normal only when the 1-month average return AND the
-# hit rate both differ meaningfully, or the average differs by a lot.
-EDGE_PTS, HIT_PTS = 0.5, 3.0
-BIG_EDGE_PTS = 1.5
+MIN_SESSIONS = 20
+MIN_EVENTS = 8
+
+# ── What counts as different from normal (1-month figures vs any session) ──
+# Each measure — average move and hit rate — leans one way once it clears its
+# threshold, and a BIG difference can carry the verdict on its own. When the
+# two lean opposite ways the record is MIXED, which is said rather than
+# averaged away into "normal".
+EDGE_PTS, HIT_PTS = 0.5, 3.0            # leaning
+BIG_EDGE_PTS, BIG_HIT_PTS = 1.5, 15.0   # decisive on its own
 
 CROSSING_VERB = {
     "OS_IN": "turned oversold",
@@ -139,29 +150,56 @@ def recent_crossings(panel: pd.DataFrame, within: int = 10) -> list[tuple[str, i
 
 @dataclass
 class Verdict:
-    label: str           # FAVOURABLE | NORMAL | UNFAVOURABLE | TOO FEW CASES
+    label: str           # FAVOURABLE | NORMAL | UNFAVOURABLE | MIXED | TOO FEW CASES
     css: str
     sentence: str
 
 
+def enough(row: pd.Series, kind: str = "zone") -> bool:
+    """Whether a zone (or crossing) row carries enough evidence for any verdict."""
+    if kind == "crossing":
+        return bool(row["N_1M"] >= MIN_EVENTS)
+    return bool(row["Episodes"] >= MIN_EPISODES and row["N_1M"] >= MIN_SESSIONS)
+
+
+def _lean(diff: float, lean: float, big: float) -> tuple[int, bool]:
+    """(-1 / 0 / +1 direction, whether the difference is decisive on its own)."""
+    if not np.isfinite(diff):
+        return 0, False
+    return (1 if diff >= lean else -1 if diff <= -lean else 0), abs(diff) >= big
+
+
 def judge(row: pd.Series, base: pd.Series) -> str:
-    edge = row["Avg_1M_%"] - base["Avg_1M_%"]
-    hit = row["Up_1M_%"] - base["Up_1M_%"]
-    if (edge >= EDGE_PTS and hit >= HIT_PTS) or (edge >= BIG_EDGE_PTS and hit >= -2):
-        return "FAVOURABLE"
-    if (edge <= -EDGE_PTS and hit <= -HIT_PTS) or (edge <= -BIG_EDGE_PTS and hit <= 2):
-        return "UNFAVOURABLE"
-    return "NORMAL"
+    """FAVOURABLE / UNFAVOURABLE / MIXED / NORMAL for a row with enough evidence."""
+    e, e_big = _lean(row["Avg_1M_%"] - base["Avg_1M_%"], EDGE_PTS, BIG_EDGE_PTS)
+    h, h_big = _lean(row["Up_1M_%"] - base["Up_1M_%"], HIT_PTS, BIG_HIT_PTS)
+    if e and h and e != h:
+        return "MIXED"                 # the two measures lean opposite ways
+    if e and e == h:
+        direction = e                  # both lean the same way
+    elif e and e_big:
+        direction = e                  # only the average leans, by a lot
+    elif h and h_big:
+        direction = h                  # only the hit rate leans, by a lot
+    else:
+        direction = 0
+    return {1: "FAVOURABLE", -1: "UNFAVOURABLE"}.get(direction, "NORMAL")
 
 
 def verdict(zev: pd.DataFrame, zone: str, index_name: str, since: pd.Timestamp) -> Verdict:
     row, base = zev.loc[zone], zev.loc["ALL"]
-    eps = int(row["Episodes"])
-    when = f"since {since:%b %Y}"
-    if eps < MIN_EPISODES or row["N_1M"] == 0:
+    eps, n = int(row["Episodes"]), int(row["N_1M"])
+    if not enough(row):
+        short = []
+        if eps < MIN_EPISODES:
+            short.append(f"{MIN_EPISODES} separate episodes")
+        if n < MIN_SESSIONS:
+            short.append(f"{MIN_SESSIONS} sessions with a month of follow-through")
         return Verdict("TOO FEW CASES", "neutral",
-                       f"Breadth has been {zone.lower()} in only {eps} separate episode{'s' if eps != 1 else ''} "
-                       f"{when}, too few to say what it usually means for {index_name}.")
+                       f"Since {since:%b %Y}, breadth has been {zone.lower()} in {eps} separate "
+                       f"episode{'s' if eps != 1 else ''}, covering {n} session{'s' if n != 1 else ''} with a "
+                       f"month of follow-through. A verdict needs at least " + " and ".join(short) +
+                       f", so it is too early to say what this zone means for {index_name}.")
     article = "an" if zone[0] in "AEIOU" else "a"
     core = (f"Since {since:%b %Y}, breadth has been {zone.lower()} in {eps} separate episodes "
             f"({row['Time_%']:.0f}% of sessions). One month after {article} {zone.lower()} session, {index_name} was "
@@ -170,6 +208,7 @@ def verdict(zev: pd.DataFrame, zone: str, index_name: str, since: pd.Timestamp) 
     label = judge(row, base)
     tail = {"FAVOURABLE": " The index has usually done better than normal from here.",
             "UNFAVOURABLE": " The index has usually done worse than normal from here.",
+            "MIXED": " The record points both ways: how often the index rose and how far it moved disagree.",
             "NORMAL": " The index has usually done about as well as normal from here."}[label]
-    css = {"FAVOURABLE": "success", "UNFAVOURABLE": "danger", "NORMAL": "neutral"}[label]
+    css = {"FAVOURABLE": "success", "UNFAVOURABLE": "danger"}.get(label, "neutral")
     return Verdict(label, css, core + tail)

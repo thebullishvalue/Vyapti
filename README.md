@@ -83,10 +83,11 @@ Colours: **green** = oversold (and positive momentum), **red** = negative moment
 
 - **Zones:** every session in the history is grouped by its zone, and the index's return over the next 21 and 63 sessions is measured.
 - **Crossings:** measured from the day Relative Breadth crossed 0.40 or 0.50. A repeat crossing within 10 sessions isn't counted again.
-- **Sample size** is stated in *separate episodes*: zone stretches less than 10 sessions apart count as one. Sessions inside one episode aren't independent evidence. Fewer than 5 episodes → "too few cases".
-- **Verdict** compares the one-month figures with all sessions in the same history:
-  - **Better than normal:** average at least 0.5 points higher *and* hit rate at least 3 points higher, or average at least 1.5 points higher.
-  - **Worse than normal:** the mirror image.
+- **Sample size** is stated in *separate episodes*: zone stretches less than 10 sessions apart count as one. Sessions inside one episode aren't independent evidence.
+- **Enough evidence:** a zone needs at least 5 episodes *and* at least 20 sessions with a month of follow-through; a crossing needs at least 8 past occurrences. Otherwise the page says "too few cases" and quotes no percentage. (A handful of sessions cannot carry one: 3 of 9 reads as "33%".)
+- **Verdict** compares the one-month figures with all sessions in the same history. The average move *leans* once it differs by 0.5 points, and the hit rate once it differs by 3 points.
+  - **Better / worse than normal:** both lean the same way, or one leans by a lot (1.5 points of average, or 15 points of hit rate) while the other doesn't lean.
+  - **Mixed:** the two lean opposite ways, for example rising less often but by more. This is said, not averaged into "normal".
   - **About normal:** anything else.
 - **No look-ahead.** Every figure uses only what was known on the day.
 - **Limits.** History uses today's index members, so names that have since left the index are missing (survivorship bias). Past patterns are evidence, not a guarantee.
@@ -137,7 +138,7 @@ Caching: constituents 1 hour, prices 5 minutes. Failures are never cached.
 | `breadth/pipeline.py` | `run()` / `build_analysis()`: everything in one call |
 | `breadth/universe.py` | Universes, constituents, sectors, index tickers |
 | `breadth/data.py` | Yahoo download, live-session append, currency inversion |
-| `tests/` | 55 offline tests (network mocked, synthetic market generator) |
+| `tests/` | 66 offline tests (network mocked, synthetic market generator) |
 
 ```bash
 pip install -r requirements-dev.txt
@@ -162,6 +163,8 @@ CI (GitHub Actions) runs lint and tests on Python 3.10 and 3.13 on every push.
 ---
 
 ## Version
+
+**v3.2.1 (2026)**: Verdict logic. One evidence threshold used everywhere (episodes *and* sessions for zones, occurrences for crossings); a large hit-rate gap counts on its own; a MIXED verdict when the hit rate and the average move disagree; "too few" names its actual shortfall.
 
 **v3.2.0 (2026)**: Renamed Market Breadth → Vyāpti and moved to this repository. Development up to here happened in `thebullishvalue/Breadth`; its full history is preserved in this one.
 

@@ -302,7 +302,7 @@ def main() -> None:
         tape = tape_frame(a)
         render_ticker(tape, instruments=tuple(tape.columns))
         meta = [("Relative Breadth", f"{a.last['Relative_Breadth']:.3f}"),
-                ("Record", {"FAVOURABLE": "Better", "NORMAL": "Normal", "UNFAVOURABLE": "Worse"}.get(
+                ("Record", {"FAVOURABLE": "Better", "NORMAL": "Normal", "UNFAVOURABLE": "Worse", "MIXED": "Mixed"}.get(
                     a.verdict.label, "Too few")),
                 ("As of", fmt.when(a.asof))]
         if recent:
