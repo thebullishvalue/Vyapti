@@ -18,7 +18,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from breadth.indicators import MIDLINE, OVERBOUGHT, OVERSOLD
+from breadth.indicators import MIDLINE, OVERBOUGHT, OVERSOLD, zone_of
 from ui.theme import chart_color, chart_layout, chart_rgba, grid_rgba, style_axes, style_secondary_axis
 
 ROWS = [0.42, 0.18, 0.18, 0.22]
@@ -119,11 +119,16 @@ def sector_heatmap(frame: pd.DataFrame) -> go.Figure:
         z=frame.T.to_numpy(), x=frame.index, y=list(frame.columns), zmin=zmin, zmax=zmax, colorscale=scale,
         colorbar=dict(title=dict(text="Rel<br>Breadth", font=dict(size=10)), tickvals=[0.30, OVERSOLD, OVERBOUGHT, 0.60],
                       tickfont=dict(size=9, family="JetBrains Mono, monospace"), thickness=10),
-        customdata=np.round(frame.T.to_numpy(), 3),
-        hovertemplate="%{y}<br>week to %{x|%d %b %Y}: %{customdata}<extra></extra>",
+        # The hover prints a label made here, not a number for Plotly to format: under the family's
+        # unified hover a heatmap left "%{customdata}" unresolved and printed the placeholder itself.
+        # One cell, one label (closest hover): a unified box over a grid only repeated the week.
+        text=[[f"{v:.3f} · {zone_of(v).lower()}" if pd.notna(v) else "" for v in row] for row in frame.T.to_numpy()],
+        hovertemplate="<b>%{y}</b><br>Week to %{x|%d %b %Y}<br>Rel Breadth %{text}<extra></extra>",
+        hoverongaps=False,
     ))
     fig.update_layout(**chart_layout(height=max(320, 22 * frame.shape[1] + 90), show_legend=False))
+    fig.update_layout(hovermode="closest")
     style_axes(fig)
-    fig.update_yaxes(showgrid=False, zeroline=False, tickfont=dict(size=9))
-    fig.update_xaxes(showgrid=False)
+    fig.update_yaxes(showgrid=False, zeroline=False, tickfont=dict(size=9), showspikes=False)
+    fig.update_xaxes(showgrid=False, showspikes=False)
     return fig

@@ -105,4 +105,4 @@ Caching: constituents 1 hour, prices 5 minutes. Failures are never cached.
 | `breadth/pipeline.py` | `run()` / `build_analysis()`: everything in one call |
 | `breadth/universe.py` | Universes, constituents, sectors, index tickers |
 | `breadth/data.py` | Yahoo download, live-session append, currency inversion |
-| `tests/` | 73 offline tests (network mocked, synthetic market generator) |
+| `tests/` | 74 offline tests (network mocked, synthetic market generator) |

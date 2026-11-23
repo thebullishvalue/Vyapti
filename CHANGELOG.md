@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ---
 
+## [3.4.2] — 2026-11-23 — *The heatmap's hover*
+### Fixed
+- **The sector heatmap's hover says what the cell is.** It printed "%{customdata}": the value was
+  handed to Plotly as a grid of numbers to place in the template, and under the family's unified
+  hover a heatmap leaves that placeholder unresolved and prints it as text. Each cell's label is now
+  written in Python ("0.478 · neutral", the reading and its zone) and the tooltip is one cell's
+  (sector, week, Rel Breadth), not a unified box that repeated the week above it. Empty cells show
+  no tooltip, and the time-series spike line no longer crosses the grid.
+
+---
+
 ## [3.4.1] — 2026-11-23 — *The pages survive a restart*
 ### Fixed
 - **A page link never goes dead.** Before a run there is nothing for the pages to show, and the

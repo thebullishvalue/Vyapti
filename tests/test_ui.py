@@ -127,3 +127,12 @@ def test_pages_registered_before_and_after_a_run():
     assert len(set(paths)) == len(paths) == 5
     assert [p[1] for p in app.PAGES] == ["Breadth Engine", "Record", "Sectors", "Data", "Method"]
     assert callable(app._hidden_pages)
+
+
+def test_sector_heatmap_hover_is_a_finished_label(analysis):
+    """The hover prints labels made in Python; a %{customdata} placeholder printed itself under unified hover."""
+    frame = tab_sectors.heatmap_frame(analysis, analysis.panel.index[-130], analysis.panel.index[-1])
+    tr = charts.sector_heatmap(frame).data[0]
+    assert "customdata" not in tr.hovertemplate and "%{text}" in tr.hovertemplate
+    cells = [c for row in tr.text for c in row if c]
+    assert cells and all(c.split(" · ")[1] in {"oversold", "neutral", "overbought"} for c in cells)
