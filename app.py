@@ -272,6 +272,39 @@ def _render_footer() -> None:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# PAGES
+# ══════════════════════════════════════════════════════════════════════════════
+
+#: Every page: (group, title, icon, url path). The paths are fixed here, not inferred from
+#: the functions, because the same addresses are registered before a run as well as after.
+PAGES = (
+    ("Engine", "Breadth Engine", ":material/monitoring:", "engine"),
+    ("Engine", "Record", ":material/history:", "_page_record"),
+    ("Engine", "Sectors", ":material/grid_view:", "_page_sectors"),
+    ("System", "Data", ":material/table_chart:", "_page_data"),
+    ("System", "Method", ":material/tune:", "_page_method"),
+)
+
+
+def _hidden_pages(render) -> None:
+    """Register every page, hidden, each drawing ``render`` (the landing page, or a failed run).
+
+    Before a run there is nothing for the pages to show, and the app used to return before
+    registering them at all. A session that starts on a page's address, or restarts under an
+    open one (Streamlit Cloud reboots the app on every push to main, and wakes a sleeping one
+    the same way), then held links to pages it had never registered: the landing page showed,
+    and every link in the rail did nothing until the next run. Registered and hidden, every
+    address resolves, the stale links go, and the page the reader was on comes back after Run.
+    """
+    def page() -> None:
+        render()
+        _render_footer()
+
+    st.navigation([st.Page(page, title=title, icon=icon, url_path=path, default=(i == 0))
+                   for i, (_, title, icon, path) in enumerate(PAGES)], position="hidden").run()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -335,23 +368,23 @@ def main() -> None:
 
     params = st.session_state.get("run_params")
     if params is None:
-        render_landing_page()
-        _render_footer()
+        _hidden_pages(render_landing_page)
         return
 
     try:
         a = _run(params, progress_slot)
     except Exception as exc:                                  # noqa: BLE001 — a boundary, not a crash
         progress_slot.empty()
-        render_empty_state("The analysis could not run", str(exc), eyebrow="Run failed",
-                           action_label="Check the market in the rail, then Run analysis again")
-        _render_footer()
+        reason = str(exc)
+        _hidden_pages(lambda: render_empty_state(
+            "The analysis could not run", reason, eyebrow="Run failed",
+            action_label="Check the market in the rail, then Run analysis again"))
         return
     if a is None:
-        render_empty_state("Not enough data", "There are no sessions with enough constituents trading to read "
-                           "breadth for this market and date.", eyebrow="Nothing to read",
-                           action_label="Choose a later date or another market in the rail")
-        _render_footer()
+        _hidden_pages(lambda: render_empty_state(
+            "Not enough data", "There are no sessions with enough constituents trading to read breadth for this "
+            "market and date.", eyebrow="Nothing to read",
+            action_label="Choose a later date or another market in the rail"))
         return
 
     st.session_state["active_instrument"] = a.universe.name
@@ -425,17 +458,12 @@ def main() -> None:
         _render_footer()
 
     # The engine leads: it is the instrument, and every reading in the app is taken off it.
-    pages = {
-        "Engine": [
-            st.Page(_page_engine, title="Breadth Engine", icon=":material/monitoring:", default=True),
-            st.Page(_page_record, title="Record", icon=":material/history:"),
-            st.Page(_page_sectors, title="Sectors", icon=":material/grid_view:"),
-        ],
-        "System": [
-            st.Page(_page_data, title="Data", icon=":material/table_chart:"),
-            st.Page(_page_method, title="Method", icon=":material/tune:"),
-        ],
-    }
+    render_page = {"Breadth Engine": _page_engine, "Record": _page_record, "Sectors": _page_sectors,
+                   "Data": _page_data, "Method": _page_method}
+    pages: dict[str, list] = {}
+    for i, (group, title, icon, path) in enumerate(PAGES):
+        pages.setdefault(group, []).append(
+            st.Page(render_page[title], title=title, icon=icon, url_path=path, default=(i == 0)))
     st.navigation(pages, position="sidebar").run()
 
 

@@ -6,7 +6,7 @@
 
 Market Breadth · Relative Breadth · Custom Breadth · A/D Line
 
-[![Version](https://img.shields.io/badge/version-3.4.0-2B5FD9)](CHANGELOG.md) [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB)](requirements.txt) [![Streamlit](https://img.shields.io/badge/streamlit-1.52.2-FF4B4B)](requirements.txt) [![License](https://img.shields.io/badge/license-proprietary-6B7280)](LICENSE) [![Pragyam Family](https://img.shields.io/badge/pragyam-family-0F1217)](#the-pragyam-family)
+[![Version](https://img.shields.io/badge/version-3.4.1-2B5FD9)](CHANGELOG.md) [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB)](requirements.txt) [![Streamlit](https://img.shields.io/badge/streamlit-1.52.2-FF4B4B)](requirements.txt) [![License](https://img.shields.io/badge/license-proprietary-6B7280)](LICENSE) [![Pragyam Family](https://img.shields.io/badge/pragyam-family-0F1217)](#the-pragyam-family)
 
 </div>
 
@@ -76,7 +76,7 @@ breadth/            the engine, no UI: indicators, study (the record), narrative
                     universe (constituents, sectors, tickers), data (Yahoo download)
 ui/                 the family's UI layer (theme.css, theme.py, components.py, format.py),
                     verdict.py (the Read card's content), charts.py, tabs/ (one per page)
-tests/              72 offline tests (network mocked, synthetic market generator)
+tests/              73 offline tests (network mocked, synthetic market generator)
 docs/               the guide
 ```
 

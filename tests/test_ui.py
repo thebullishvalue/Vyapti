@@ -117,3 +117,13 @@ def test_method_panels_are_prose_rows():
     assert html.count('class="lookback-row prose"') == len(tab_method.OSCILLATORS)
     assert html.count('class="role"') == len(tab_method.OSCILLATORS)    # every oscillator names its role
     assert 'class="role"' not in tab_method.method_html(tab_method.COUNTING)
+
+
+def test_pages_registered_before_and_after_a_run():
+    """One page table serves both navigations, so every address a browser can hold resolves
+    in a fresh session (before Run) as well as after one."""
+    import app
+    paths = [p[3] for p in app.PAGES]
+    assert len(set(paths)) == len(paths) == 5
+    assert [p[1] for p in app.PAGES] == ["Breadth Engine", "Record", "Sectors", "Data", "Method"]
+    assert callable(app._hidden_pages)

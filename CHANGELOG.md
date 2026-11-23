@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ---
 
+## [3.4.1] — 2026-11-23 — *The pages survive a restart*
+### Fixed
+- **A page link never goes dead.** Before a run there is nothing for the pages to show, and the
+  app returned before registering them at all. A session that started on a page's address, or
+  restarted under an open one (Streamlit Cloud reboots the app on every push to main, and wakes a
+  sleeping app the same way), kept the old page links on screen for pages it had never
+  registered: the next click showed the landing page, the address stayed where it was, and every
+  link in the rail did nothing until the next run. The pages are now registered on every run,
+  hidden before an analysis and each showing the landing page (or a failed run's notice), so every
+  address resolves, the stale links go, and Run analysis returns the reader to the page they were on.
+
+---
+
 ## [3.4.0] — 2026-11-23 — *Tables, the command bar, and every width*
 ### Changed
 - **The Method page is the family's method panel.** Its four specifications (Counting, The
