@@ -5,7 +5,7 @@ How Vyāpti reads breadth, how its record is worked out, and why it is built thi
 
 ## The Interface
 
-The interface is the Pragyam family's, shared by all ten members. Its UI layer (`ui/theme.css`, `ui/theme.py`, `ui/components.py`, `ui/format.py`) is adopted whole from Arthagati, so Vyāpti reads as one more instrument from the same terminal. Its terminal output is the family
+The interface is the Pragyam family's, shared by all eleven members. Its UI layer (`ui/theme.css`, `ui/theme.py`, `ui/components.py`, `ui/format.py`) is adopted whole from Arthagati, so Vyāpti reads as one more instrument from the same terminal. Its terminal output is the family
 console (`logger_config.py`), so a run reads the same in the terminal as any other member's:
 
 - **"Graphite" design language:** Inter for prose, JetBrains Mono for every figure.
