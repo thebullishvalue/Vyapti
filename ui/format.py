@@ -44,6 +44,17 @@ def num(v, dp: int = 2, signed: bool = False) -> str:
     return f"{float(v):{'+' if signed else ''}.{dp}f}"
 
 
+def signed(v, dp: int = 2) -> str:
+    """A change as a table shows it: ``+1.23`` or ``−0.64`` (a typographic minus, the width of a
+    plus); a value that rounds to zero carries no sign, and a missing one is a dash."""
+    if _isnull(v):
+        return DASH
+    s = f"{float(v):+,.{dp}f}"
+    if float(s.replace(",", "")) == 0:
+        return f"{0:.{dp}f}"
+    return s.replace("-", "−")
+
+
 def pct(v, dp: int = 1, signed: bool = True) -> str:
     """A percentage that already arrives in percent units (12.4 → +12.4%)."""
     if _isnull(v):

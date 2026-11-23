@@ -12,7 +12,7 @@ console (`logger_config.py`), so a run reads the same in the terminal as any oth
 - **Semantic colour only:** green is long, red is short, amber is caution, cobalt is the system.
 - **Flat panels**, with **Paper (light)** and **Slate (dark)** appearances. The light theme is a token swap, not a second stylesheet.
 
-**Shell (identical on every page):** ticker tape (the index and every sector's equal-weighted level) → command bar (instrument · zone, index level and change, Relative Breadth, record, last crossing, window, as-of, freshness chip) → notice rail (caveats such as substitute constituents, no index price or missing prices).
+**Shell (identical on every page):** ticker tape (the index and every sector's equal-weighted level) → command bar (instrument · zone, index level and change, Rel Breadth, record, sessions in the zone, window, as-of, freshness chip) → notice rail (caveats such as substitute constituents, no index price or missing prices).
 
 **Rail:** brand → Market (universe, index) → Record (history to judge against, as-of date) → Session (Run, Refresh data, Start over) → Appearance. Global controls live in the rail; the chart window lives in the header of the chart it reframes.
 
@@ -105,4 +105,4 @@ Caching: constituents 1 hour, prices 5 minutes. Failures are never cached.
 | `breadth/pipeline.py` | `run()` / `build_analysis()`: everything in one call |
 | `breadth/universe.py` | Universes, constituents, sectors, index tickers |
 | `breadth/data.py` | Yahoo download, live-session append, currency inversion |
-| `tests/` | 69 offline tests (network mocked, synthetic market generator) |
+| `tests/` | 72 offline tests (network mocked, synthetic market generator) |

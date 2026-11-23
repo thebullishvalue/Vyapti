@@ -17,6 +17,7 @@ import streamlit as st
 
 from breadth.indicators import MIN_SECTOR_MEMBERS
 from ui import charts
+from ui import format as fmt
 from ui.components import (
     render_chart_panel,
     render_kpi_strip,
@@ -93,10 +94,12 @@ def render(a, view: pd.DataFrame, tf: str) -> None:
         "with its equal-weighted move over the last month.",
         icon="bar-chart", accent="cyan",
     )
-    table = sec.assign(Zone=sec["Zone"].str.title(), Direction=sec["Direction"].str.title()).rename(
-        columns={"Relative_Breadth": "Relative Breadth", "Move_1M_%": "Last month %"})
+    table = sec.assign(Zone=sec["Zone"].str.title(), Direction=sec["Direction"].str.title(),
+                       **{"Move_1M_%": [fmt.signed(v, 1) for v in sec["Move_1M_%"]]}).rename(
+        columns={"Relative_Breadth": "Rel Breadth", "Move_1M_%": "Last month %"})
     render_table_panel(table, key="sector-table", label_col="Sector", sign_color_cols={"Last month %"},
-                       col_precision={"Relative Breadth": 3, "Last month %": 1}, max_height=520)
+                       context=f"{a.universe.name} · {len(table)} sectors · oversold first",
+                       col_precision={"Rel Breadth": 3}, max_height=560)
 
     # ── 4 · DETAIL ────────────────────────────────────────────────────────
     render_section_header(
@@ -104,12 +107,15 @@ def render(a, view: pd.DataFrame, tf: str) -> None:
         f"The {unit} underneath, by their move in the latest session.",
         icon="layers", accent="violet",
     )
-    pick = st.selectbox("Sector", ["All sectors"] + sorted(a.stocks["Sector"].unique()),
-                        key="sector_pick", label_visibility="collapsed")
+    with st.container(key="sector-filter"):
+        pick = st.selectbox("Sector", ["All sectors"] + sorted(a.stocks["Sector"].unique()),
+                            key="sector_pick", label_visibility="collapsed")
     stocks = a.stocks if pick == "All sectors" else a.stocks[a.stocks["Sector"] == pick]
     if not stocks["Name"].astype(bool).any():
         stocks = stocks.drop(columns="Name")
-    stocks = stocks.rename(columns={"Day_%": "Latest session %", "Month_%": "Last month %"})
+    stocks = stocks.assign(**{"Day_%": [fmt.signed(v) for v in stocks["Day_%"]],
+                              "Month_%": [fmt.signed(v, 1) for v in stocks["Month_%"]]}).rename(
+        columns={"Day_%": "Latest session %", "Month_%": "Last month %"})
     render_table_panel(stocks, key="sector-stocks", context=f"{pick} · {len(stocks)} {unit}",
                        label_col="Symbol", sign_color_cols={"Latest session %", "Last month %"},
-                       col_precision={"Price": 2, "Latest session %": 2, "Last month %": 1}, max_height=480)
+                       col_precision={"Price": 2}, max_height=480)

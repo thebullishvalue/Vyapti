@@ -54,12 +54,12 @@ def zone_table(a) -> pd.DataFrame:
         r = zev.loc[z]
         ok = enough(r)
         rows.append({"Zone": z.title(), "Share %": r["Time_%"], "Episodes": int(r["Episodes"]),
-                     "Up 1M %": r["Up_1M_%"], "Avg 1M %": r["Avg_1M_%"],
-                     "Up 3M %": r["Up_3M_%"], "Avg 3M %": r["Avg_3M_%"],
+                     "Up 1M %": r["Up_1M_%"], "Avg 1M %": fmt.signed(r["Avg_1M_%"]),
+                     "Up 3M %": r["Up_3M_%"], "Avg 3M %": fmt.signed(r["Avg_3M_%"]),
                      "Versus normal": VERSUS[judge(r, base)] if ok else "Too few"})
     rows.append({"Zone": "Any session", "Share %": 100.0, "Episodes": None,
-                 "Up 1M %": base["Up_1M_%"], "Avg 1M %": base["Avg_1M_%"],
-                 "Up 3M %": base["Up_3M_%"], "Avg 3M %": base["Avg_3M_%"], "Versus normal": "—"})
+                 "Up 1M %": base["Up_1M_%"], "Avg 1M %": fmt.signed(base["Avg_1M_%"]),
+                 "Up 3M %": base["Up_3M_%"], "Avg 3M %": fmt.signed(base["Avg_3M_%"]), "Versus normal": "—"})
     return pd.DataFrame(rows)
 
 
@@ -69,8 +69,8 @@ def crossing_table(a) -> pd.DataFrame:
     for _, r in a.crossing_evidence.iterrows():
         rows.append({"Crossing": r["What"], "Times": int(r["Times"]), "Per year": r["Per_Year"],
                      "Most recent": r["Last"].date() if pd.notna(r["Last"]) else None,
-                     "Up 1M %": r["Up_1M_%"], "Avg 1M %": r["Avg_1M_%"],
-                     "Up 3M %": r["Up_3M_%"], "Avg 3M %": r["Avg_3M_%"],
+                     "Up 1M %": r["Up_1M_%"], "Avg 1M %": fmt.signed(r["Avg_1M_%"]),
+                     "Up 3M %": r["Up_3M_%"], "Avg 3M %": fmt.signed(r["Avg_3M_%"]),
                      "Versus normal": VERSUS[judge(r, base)] if enough(r, "crossing") else "Too few"})
     return pd.DataFrame(rows)
 
@@ -84,9 +84,9 @@ def episode_table(a) -> pd.DataFrame:
         "Began": ep["Start"].dt.date,
         "Ended": [("ongoing" if o else e.date()) for e, o in zip(ep["End"], ep["Ongoing"], strict=True)],
         "Sessions": ep["Sessions"],
-        "Lowest RB": ep["Extreme"],
-        f"{ref} during %": ep["Index_During_%"],
-        f"{ref} 1M after start %": ep["Index_1M_%"],
+        "Lowest Rel Breadth": ep["Extreme"],
+        f"{ref} during %": [fmt.signed(v) for v in ep["Index_During_%"]],
+        f"{ref} 1M after start %": [fmt.signed(v) for v in ep["Index_1M_%"]],
     }).iloc[::-1].reset_index(drop=True)
 
 
@@ -113,7 +113,7 @@ def render(a) -> None:
     render_table_panel(
         zone_table(a), key="record-zone-table", context=ctx, label_col="Zone",
         sign_color_cols={"Avg 1M %", "Avg 3M %"},
-        col_precision={"Share %": 0, "Episodes": 0, "Up 1M %": 0, "Up 3M %": 0, "Avg 1M %": 2, "Avg 3M %": 2},
+        col_precision={"Share %": 0, "Episodes": 0, "Up 1M %": 0, "Up 3M %": 0},
         max_height=200,
     )
 
@@ -127,7 +127,7 @@ def render(a) -> None:
     render_table_panel(
         crossing_table(a), key="record-crossings", context=ctx, label_col="Crossing",
         sign_color_cols={"Avg 1M %", "Avg 3M %"},
-        col_precision={"Per year": 1, "Up 1M %": 0, "Up 3M %": 0, "Avg 1M %": 2, "Avg 3M %": 2},
+        col_precision={"Per year": 1, "Up 1M %": 0, "Up 3M %": 0},
         max_height=200,
     )
 
@@ -145,7 +145,7 @@ def render(a) -> None:
         render_table_panel(
             ep, key="record-episodes", context=f"{len(ep)} episodes", label_col="Began",
             sign_color_cols={c for c in ep.columns if c.endswith("%")},
-            col_precision={"Lowest RB": 3}, max_height=420,
+            col_precision={"Lowest Rel Breadth": 3}, max_height=420,
         )
     render_note("History uses today's index members, so companies that have since left the index are "
                 "missing. Past patterns are evidence, not a guarantee.")

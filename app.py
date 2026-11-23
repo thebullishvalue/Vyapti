@@ -367,18 +367,21 @@ def main() -> None:
     status_label, status_tone = fmt.age_label(age)
     if params["asof"] < today:
         status_label, status_tone = f"AS OF {a.asof:%d %b %Y}".upper(), "info"
-    recent = "; ".join(f"{CROSSING_TEXT[k].removeprefix('Breadth ').lower()} {ago}d ago" for k, ago in a.recent[:1])
 
     def _shell(*, windowed: bool = False) -> None:
         """Tape (the world) → command bar (this read) → notice rail (its caveats). Identical on every page."""
         tape = tape_frame(a)
         render_ticker(tape, instruments=tuple(tape.columns))
-        meta = [("Relative Breadth", f"{a.last['Relative_Breadth']:.3f}"),
+        # Short readouts, as in every member's bar (Arthagati: Mood · MSF · Regime · Window · As of).
+        # A sentence here ("turned overbought 1d ago") outgrew its cell and pushed the bar onto
+        # three rows at 834px; the zone is already in the instrument line, so the bar says how
+        # long it has held, and the Crossing Log keeps the history.
+        held = int(a.last.get("Days_In_Zone", 0) or 0)
+        meta = [("Rel Breadth", f"{a.last['Relative_Breadth']:.3f}"),
                 ("Record", {"FAVOURABLE": "Better", "NORMAL": "Normal", "UNFAVOURABLE": "Worse", "MIXED": "Mixed"}.get(
                     a.verdict.label, "Too few")),
+                ("In zone", f"{held} session{'s' * (held != 1)}"),
                 ("As of", fmt.when(a.asof))]
-        if recent:
-            meta.insert(2, ("Last", recent))
         if windowed:
             meta.insert(-1, ("Window", tf))
         render_top_bar(

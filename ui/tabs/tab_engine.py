@@ -72,9 +72,10 @@ def crossing_log(a, view: pd.DataFrame) -> pd.DataFrame:
         for d in flags[flags].index:
             if d < view.index[0]:
                 continue
-            rows.append({"Date": d.date(), "Crossing": CROSSING_TEXT[key],
-                         "Relative Breadth": a.panel.at[d, "Relative_Breadth"],
-                         "Index": a.price.get(d, np.nan), "Index 1M later %": fwd.get(d, np.nan)})
+            # The column says "crossing" and the page says "breadth": the row keeps the verb.
+            rows.append({"Date": d.date(), "Crossing": CROSSING_TEXT[key].removeprefix("Breadth ").capitalize(),
+                         "Rel Breadth": a.panel.at[d, "Relative_Breadth"],
+                         "Index": a.price.get(d, np.nan), "Index 1M later %": fmt.signed(fwd.get(d, np.nan))})
     if not rows:
         return pd.DataFrame()
     return pd.DataFrame(rows).sort_values("Date", ascending=False).reset_index(drop=True)
@@ -130,7 +131,9 @@ def render(a, view: pd.DataFrame, tf: str) -> None:
         "agrees — then what would change it, and what followed the last times that happened.",
         icon="layers", accent="violet",
     )
-    c1, c2 = st.columns([3, 2], gap="medium")
+    # The family's two-column rule sets each half to 50% less half a 1rem gap: a wider gap
+    # ("medium") pushed the second card onto a row of its own, half the page left empty.
+    c1, c2 = st.columns(2, gap="small")
     with c1:
         render_interpretation_card(
             f"{zone} · RELATIVE BREADTH {a.last['Relative_Breadth']:.3f}",
@@ -159,6 +162,6 @@ def render(a, view: pd.DataFrame, tf: str) -> None:
         render_table_panel(
             log, key="engine-crossings", context=f"{tf} window · {len(log)} crossings",
             label_col="Date", sign_color_cols={"Index 1M later %"},
-            col_precision={"Relative Breadth": 3, "Index": 2, "Index 1M later %": 2},
+            col_precision={"Rel Breadth": 3, "Index": 2},
             max_height=340,
         )

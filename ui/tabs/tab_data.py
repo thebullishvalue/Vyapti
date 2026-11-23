@@ -29,6 +29,23 @@ def daily_table(view: pd.DataFrame) -> pd.DataFrame:
     return out.iloc[::-1]
 
 
+def display_table(table: pd.DataFrame) -> pd.DataFrame:
+    """The daily table as the page shows it; the CSV keeps every column raw.
+
+    Twelve columns at the names above needed 1,190px in a 1,134px panel at 1440, so the last
+    column was cut. The screen uses the app's own short names (Rel Breadth and Rel A/D, as on
+    the command bar and the chart axes), states coverage as a percentage, shows every breadth
+    value to three places as everywhere else in the app, and signs the one column that is a
+    change: momentum."""
+    out = table.rename(columns={"Relative Breadth": "Rel Breadth", "Rel A/D Ratio": "Rel A/D",
+                                "Coverage %": "Coverage"})
+    out["Coverage"] = [f"{v:.0f}%" if pd.notna(v) else fmt.DASH for v in out["Coverage"]]
+    out["Rel A/D"] = [fmt.signed(v, 3) for v in out["Rel A/D"]]
+    # A level, not a change: no plus, but the same minus as the column beside it.
+    out["A/D Line"] = [f"{v:,.0f}".replace("-", "−") if pd.notna(v) else fmt.DASH for v in out["A/D Line"]]
+    return out
+
+
 def render(a, view: pd.DataFrame, tf: str) -> None:
     u, d = a.universe, a.data
     render_section_header(
@@ -57,10 +74,10 @@ def render(a, view: pd.DataFrame, tf: str) -> None:
         icon="layers",
     )
     table = daily_table(view)
-    render_table_panel(table, key="data-daily", window=True, index_label="Date",
-                       col_precision={"Coverage %": 0, "A/D Ratio": 3, "Custom Breadth": 4,
-                                      "Relative Breadth": 4, "Rel A/D Ratio": 4, "A/D Line": 0},
-                       sign_color_cols={"Rel A/D Ratio"}, max_height=560)
+    render_table_panel(display_table(table), key="data-daily", window=True, index_label="Date",
+                       context=f"{u.name} · {tf} · {len(table):,} sessions · newest first",
+                       col_precision={"A/D Ratio": 2, "Custom Breadth": 3, "Rel Breadth": 3},
+                       sign_color_cols={"Rel A/D"}, max_height=560)
     safe = re.sub(r"[^A-Za-z0-9]+", "_", u.name).strip("_")
     st.download_button("Download CSV", table.to_csv().encode("utf-8"),
                        f"{safe}_breadth_{view.index[0]:%Y%m%d}_{view.index[-1]:%Y%m%d}.csv", "text/csv",

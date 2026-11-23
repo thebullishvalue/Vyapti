@@ -319,7 +319,7 @@ def render_chart_panel(
         st.plotly_chart(fig, width="stretch", key=f"chart-{key}", config=PLOTLY_CONFIG)
 
 
-def render_window_control(key: str = "window") -> None:   # noqa: ARG001
+def render_window_control(key: str = "window") -> None:
     """The chart-window selector, rendered inside a panel header.
 
     It used to sit in a toolbar strip docked under the command bar — page
@@ -338,11 +338,28 @@ def render_window_control(key: str = "window") -> None:   # noqa: ARG001
     options = [tf for tf in TIMEFRAMES if tf != "1W"]
     if st.session_state.get("tf_selected") not in options:
         st.session_state["tf_selected"] = DEFAULT_TIMEFRAME
-    st.segmented_control(
-        "Window", options, key="tf_selected", label_visibility="collapsed",
+
+    # The choice lives in a plain session key (tf_selected); each page's control only shows it.
+    # As one shared widget key it lost its value on every page change (Streamlit keys a widget
+    # by page as well as name, and drops the state of any widget a run does not draw), so a
+    # chart page reached from another showed a window control with nothing selected. Each
+    # panel's control now has its own key, starts from the choice, and writes it back.
+    choice = st.session_state["tf_selected"]
+    wkey = f"tf_{key}"
+
+    def _sync() -> None:
+        picked = st.session_state.get(wkey)
+        if picked is not None:
+            st.session_state["tf_selected"] = picked
+
+    picked = st.segmented_control(
+        "Window", options, key=wkey, default=choice, label_visibility="collapsed", on_change=_sync,
         help="Chart window. Applies to every plot on this page; the oscillators "
              "and the record are always computed on the full history.",
     )
+    if picked != choice:            # the chosen segment clicked off, or a stale state: show the choice
+        del st.session_state[wkey]
+        st.rerun()
 
 
 def render_loading_skeleton(

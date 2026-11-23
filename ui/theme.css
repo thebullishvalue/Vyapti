@@ -2814,6 +2814,60 @@ input::placeholder, textarea::placeholder {
    layer is dark. Painted from our page token in both appearances. */
 .stTabs::after { background-image: linear-gradient(to right, transparent, var(--bg)) !important; }
 
+/* ── Vyāpti: the Method page is the family's method panel ────────────────────────
+   Nishkarsh's System page, carried whole. The page used to set its rules in the data
+   table, which never wraps (a table is scanned across, and its cells are nowrap mono):
+   sentences ran past the panel at 1440px and were cut mid-word on a phone. The rules are
+   prose, read down: the term on the left, the rule in the reading face on the right,
+   stacked under 640px. An oscillator's role sits under its name in the label tier. */
+.panel-specs .lookback-row.prose {
+    display: grid; grid-template-columns: minmax(8rem, 13rem) minmax(0, 1fr);
+    gap: var(--s4); align-items: baseline; padding: var(--s3) 0;
+}
+.panel-specs .lookback-row.prose .val {
+    text-align: left; font-family: var(--sans); font-size: var(--fs-md);
+    font-weight: 400; line-height: 1.6; color: var(--ink-secondary);
+}
+.panel-specs .lookback-row.prose .lbl { color: var(--ink); font-weight: 600; }
+.panel-specs .lookback-row.prose .lbl .role {
+    display: block; margin-top: var(--s1);
+    font-size: var(--fs-3xs); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-quaternary);
+}
+.method-specs { padding-top: var(--s1); }
+.method-specs p {
+    margin: 0 !important; font: inherit !important; color: inherit !important;
+    line-height: inherit !important;
+}
+@media (max-width: 640px) {
+    .panel-specs .lookback-row.prose { grid-template-columns: minmax(0, 1fr); gap: var(--s1); }
+}
+/* Streamlit gives every markdown container a -1rem bottom margin, so the panel sized
+   itself 16px short and clipped the last row under its edge (Nishkarsh's B9c). */
+[class*="st-key-panel-"]:has(.method-specs) [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
+}
+
+/* ── Vyāpti: The Reading's two cards stand as a pair ─────────────────────────────
+   The family passes a column's height down to a metric card (above); the reading and
+   "what would change it" sit side by side the same way, and ended 20-80px apart. The same
+   chain, named for the interpretation card, plus the unnamed div Streamlit puts between a
+   markdown element and its container, which otherwise stops at its content's height. */
+[data-testid="stColumn"] [data-testid="stElementContainer"]:has(.interp-card) {
+    flex: 1 1 auto; display: flex; flex-direction: column;
+}
+[data-testid="stColumn"] .stMarkdown:has(.interp-card),
+[data-testid="stColumn"] .stMarkdown:has(.interp-card) > div,
+[data-testid="stColumn"] [data-testid="stMarkdownContainer"]:has(.interp-card) {
+    flex: 1 1 auto; display: flex; flex-direction: column;
+}
+[data-testid="stColumn"] .interp-card { flex: 1 1 auto; }
+
+/* ── Vyāpti: the Constituents filter is a control, not a banner ─────────────────
+   A selectbox fills its column, and this one sat alone across the whole page above
+   the table it filters. It keeps the width of the rail's controls. */
+.st-key-sector-filter { max-width: 320px; }
+
 /* ── Vyāpti: a note on the Read card is not a risk ──────────────────────────────
    .hero-risk draws in the short colour: Arthagati's card uses it for what argues against
    the call. Vyāpti also says when overbought is ordinary in an index (above 0.50 on a third

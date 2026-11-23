@@ -68,19 +68,19 @@ def engine_stack(view: pd.DataFrame, price: pd.Series, price_label: str, events:
 
     # Row 3 — A/D ratio per session, on a log scale centred on 1.
     adr = view["AD_Ratio"].clip(lower=0.05)
-    fig.add_trace(go.Bar(x=x, y=np.log10(adr), name="A/D ratio", showlegend=False,
+    fig.add_trace(go.Bar(x=x, y=np.log10(adr), name="A/D Ratio", showlegend=False,
                          customdata=view["AD_Ratio"], hovertemplate="%{customdata:.2f}",
                          marker_color=[chart_rgba("emerald", 0.6) if v > 1 else chart_rgba("rose", 0.6)
                                        for v in adr]), row=3, col=1)
     fig.add_trace(go.Scattergl(x=x, y=np.log10(view["ADR_MA10"].clip(lower=0.05)), mode="lines",
-                               name="A/D 10-session avg", customdata=view["ADR_MA10"],
+                               name="A/D Ratio 10-session avg", customdata=view["ADR_MA10"],
                                hovertemplate="%{customdata:.2f}", line=dict(color=slate, width=1.2)),
                   row=3, col=1)
 
     # Row 4 — the A/D line against its 50-session average (the longer trend).
-    fig.add_trace(go.Scattergl(x=x, y=view["AD_Line_MA50"], mode="lines", name="A/D line 50-session avg",
+    fig.add_trace(go.Scattergl(x=x, y=view["AD_Line_MA50"], mode="lines", name="A/D Line 50-session avg",
                                line=dict(color=slate, width=1.1, dash="dot")), row=4, col=1)
-    fig.add_trace(go.Scattergl(x=x, y=view["AD_Line"], mode="lines", name="A/D line",
+    fig.add_trace(go.Scattergl(x=x, y=view["AD_Line"], mode="lines", name="A/D Line",
                                line=dict(color=info, width=1.5)), row=4, col=1)
 
     # Zone bands and lines — after the traces (Plotly skips subplots that are still empty).
@@ -102,9 +102,9 @@ def engine_stack(view: pd.DataFrame, price: pd.Series, price_label: str, events:
     fig.update_yaxes(autorange=True, row=1, col=1, secondary_y=True)
     style_axes(fig, y_title="Rel A/D", row=2, col=1)
     ticks = [0.1, 0.25, 0.5, 1, 2, 4, 10]
-    style_axes(fig, y_title="A/D ratio", row=3, col=1)
+    style_axes(fig, y_title="A/D Ratio", row=3, col=1)
     fig.update_yaxes(tickvals=np.log10(ticks), ticktext=[f"{t:g}" for t in ticks], row=3, col=1)
-    style_axes(fig, y_title="A/D line", row=4, col=1)
+    style_axes(fig, y_title="A/D Line", row=4, col=1)
     _hairlines(fig, ROWS)
     return fig
 
@@ -117,7 +117,7 @@ def sector_heatmap(frame: pd.DataFrame) -> go.Figure:
              [pos(OVERSOLD) + 0.001, chart_rgba("slate", 0.10)], [1, chart_rgba("slate", 0.75)]]
     fig = go.Figure(go.Heatmap(
         z=frame.T.to_numpy(), x=frame.index, y=list(frame.columns), zmin=zmin, zmax=zmax, colorscale=scale,
-        colorbar=dict(title=dict(text="RB", font=dict(size=10)), tickvals=[0.30, OVERSOLD, OVERBOUGHT, 0.60],
+        colorbar=dict(title=dict(text="Rel<br>Breadth", font=dict(size=10)), tickvals=[0.30, OVERSOLD, OVERBOUGHT, 0.60],
                       tickfont=dict(size=9, family="JetBrains Mono, monospace"), thickness=10),
         customdata=np.round(frame.T.to_numpy(), 3),
         hovertemplate="%{y}<br>week to %{x|%d %b %Y}: %{customdata}<extra></extra>",

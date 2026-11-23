@@ -46,7 +46,7 @@ def test_engine_stack_and_heatmap(analysis):
     view = analysis.panel.tail(130)
     fig = charts.engine_stack(view, analysis.price, "TEST", events(analysis.panel))
     names = {t.name for t in fig.data}
-    assert {"Relative Breadth", "Custom Breadth", "TEST", "A/D line"} <= names
+    assert {"Relative Breadth", "Custom Breadth", "TEST", "A/D Line"} <= names
     assert any(s.y0 == 0.40 or s.y1 == 0.40 for s in fig.layout.shapes)   # oversold band drawn
     frame = tab_sectors.heatmap_frame(analysis, view.index[0], view.index[-1])
     assert list(frame.columns) and charts.sector_heatmap(frame).data
@@ -92,3 +92,28 @@ def test_run_log_record_line(analysis):
     assert line and line[0].isupper() and "\n" not in line
     card = app._result_card(analysis)
     assert {"As of", "Universe", "History", "Zone", "Direction", "Record", "Sectors"} <= set(card)
+
+
+def test_signed_format():
+    from ui import format as fmt
+    assert fmt.signed(1.234) == "+1.23" and fmt.signed(-0.641) == "−0.64"
+    assert fmt.signed(0.001) == "0.00" and fmt.signed(float("nan")) == fmt.DASH
+    assert fmt.signed(1234.5, 1) == "+1,234.5"
+
+
+def test_daily_table_screen_and_csv(analysis):
+    from ui.tabs import tab_data
+    raw = tab_data.daily_table(analysis.panel.tail(30))
+    shown = tab_data.display_table(raw)
+    assert "Rel Breadth" in shown and "Rel A/D" in shown and "Coverage" in shown
+    assert raw["Rel A/D Ratio"].dtype.kind == "f"                       # the CSV stays numeric
+    assert all(v[0] in "+−0—" for v in shown["Rel A/D"])                 # the screen signs momentum
+    assert all(v.endswith("%") or v == "—" for v in shown["Coverage"])
+
+
+def test_method_panels_are_prose_rows():
+    from ui.tabs import tab_method
+    html = tab_method.method_html(tab_method.OSCILLATORS)
+    assert html.count('class="lookback-row prose"') == len(tab_method.OSCILLATORS)
+    assert html.count('class="role"') == len(tab_method.OSCILLATORS)    # every oscillator names its role
+    assert 'class="role"' not in tab_method.method_html(tab_method.COUNTING)
