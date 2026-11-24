@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ---
 
+## [3.4.4] — 2026-11-24 — *Help icons on Paper*
+### Fixed
+- **Help icons show on Paper.** A widget's (?) is a ring that Streamlit strokes with its own colour, near-white at
+  60% from its static dark base, whatever colour the icon is given: on Paper the rail's hints beside Judge against and As of all but vanished.
+  The family's fidelity block now makes the stroke follow the colour, the quiet ink, brighter on hover.
+
+---
+
 ## [3.4.3] — 2026-11-24 — *The family's tab icon*
 ### Fixed
 - **The browser tab carries the family's mark.** The tab showed Breadth's own line-only glyph, in a
