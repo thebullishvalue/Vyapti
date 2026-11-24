@@ -48,9 +48,14 @@ from ui.tabs import tab_data, tab_engine, tab_method, tab_record, tab_sectors
 from ui.tabs.tab_landing import render_landing_page
 from ui.theme import inject_css, progress_bar
 
-PAGE_ICON = ("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAy"
-             "NCAyNCI+PHBhdGggZD0iTTMgMTdsNS02IDQgMyA5LTkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzRDN0RGMCIgc3Ryb2tlLXdp"
-             "ZHRoPSIyLjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==")
+PAGE_ICON = (  # Tattva's exact tab icon (its cobalt ring-and-line mark), the same bytes as every member's, so the
+               # family's tabs match
+    "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ij"
+    "AgMCAyNCAyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzNENkZFOC"
+    "Igc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTggMTRsMy01IDIgMyAzLTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIz"
+    "NENkZFOCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bm"
+    "QiLz48L3N2Zz4="
+)
 IST = timezone(timedelta(hours=5, minutes=30))
 
 

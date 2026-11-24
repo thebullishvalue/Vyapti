@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ---
 
+## [3.4.3] — 2026-11-24 — *The family's tab icon*
+### Fixed
+- **The browser tab carries the family's mark.** The tab showed Breadth's own line-only glyph, in a
+  different blue and weight, while every other member shows Tattva's cobalt ring-and-line icon; it
+  now uses the same bytes as theirs, so the family's tabs read as one set.
+
+---
+
 ## [3.4.2] — 2026-11-23 — *The heatmap's hover*
 ### Fixed
 - **The sector heatmap's hover says what the cell is.** It printed "%{customdata}": the value was
